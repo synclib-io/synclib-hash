@@ -1,0 +1,160 @@
+{
+  "description": "Cross-platform test vectors for synclib_hash Merkle tree implementation",
+  "version": "1.0.0",
+  "note": "All implementations (C, Elixir, TypeScript, Dart) should produce identical results for these test cases",
+
+  "sha256": [
+    {
+      "input": "",
+      "expected": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "description": "SHA256 of empty string"
+    },
+    {
+      "input": "hello",
+      "expected": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+      "description": "SHA256 of 'hello'"
+    },
+    {
+      "input": "The quick brown fox jumps over the lazy dog",
+      "expected": "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592",
+      "description": "SHA256 of classic test string"
+    }
+  ],
+
+  "sorted_json": [
+    {
+      "input": {},
+      "skip_keys": [],
+      "expected": "{}",
+      "description": "Empty object"
+    },
+    {
+      "input": {"name": "Alice", "age": 30},
+      "skip_keys": [],
+      "expected": "{\"age\":30,\"name\":\"Alice\"}",
+      "description": "Simple object with sorted keys"
+    },
+    {
+      "input": {"id": "123", "document": {"big": "data"}},
+      "skip_keys": ["document"],
+      "expected": "{\"id\":\"123\"}",
+      "description": "Object with skipped key"
+    },
+    {
+      "input": {"name": null, "id": "test"},
+      "skip_keys": [],
+      "expected": "{\"id\":\"test\",\"name\":null}",
+      "description": "Object with null value"
+    },
+    {
+      "input": {"flag": true, "count": 42},
+      "skip_keys": [],
+      "expected": "{\"count\":42,\"flag\":true}",
+      "description": "Object with boolean and integer"
+    },
+    {
+      "input": {"value": 3.14159, "whole": 1.0},
+      "skip_keys": [],
+      "expected": "{\"value\":3.14159,\"whole\":1}",
+      "description": "Object with floats (whole numbers without decimals)"
+    },
+    {
+      "input": {"text": "hello\nworld\ttab"},
+      "skip_keys": [],
+      "expected": "{\"text\":\"hello\\nworld\\ttab\"}",
+      "description": "Object with escape sequences"
+    }
+  ],
+
+  "row_hash": [
+    {
+      "row_id": "abc123",
+      "sorted_json": "{\"name\":\"Test\",\"value\":42}",
+      "expected": "aa2c1722c37cf3ddfe27317efdd5852123b37f345c375bf092f90124e99d7d80",
+      "description": "Basic row hash",
+      "hash_input": "abc123|{\"name\":\"Test\",\"value\":42}"
+    },
+    {
+      "row_id": "user_001",
+      "sorted_json": "{\"active\":true,\"email\":\"alice@example.com\",\"name\":\"Alice\"}",
+      "expected": "4775731d54cbe3ce64d59e4a809b107c9b99aab5f35b5a73c27d2b874b2404ea",
+      "description": "User row hash",
+      "hash_input": "user_001|{\"active\":true,\"email\":\"alice@example.com\",\"name\":\"Alice\"}"
+    }
+  ],
+
+  "block_hash": [
+    {
+      "row_hashes": [],
+      "expected": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "description": "Empty block returns SHA256('')"
+    },
+    {
+      "row_hashes": [
+        "07e0263112da17457fede8519fb3a507f2c5cbeda3c8577ab1ad1fa0891e027c",
+        "341353c74b3860fe2788732b8f754382ab4b1a2a8ac268b89321c8cf6a126af7"
+      ],
+      "expected": "f52f8aad5575c997b40df5e73dacb06dac6e7007565e1e2f73c81e41ff588ad2",
+      "description": "Block with 2 rows"
+    }
+  ],
+
+  "merkle_root": [
+    {
+      "block_hashes": [],
+      "expected": "",
+      "description": "Empty tree returns empty string"
+    },
+    {
+      "block_hashes": [
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ],
+      "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "description": "Single block returns itself"
+    },
+    {
+      "block_hashes": [
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "expected": "fa0dafbf43f1f551e536353e9d1a942a8e86e41a0b58dfeaf264ef217f6b862a",
+      "description": "Two blocks - SHA256(a+b)"
+    },
+    {
+      "block_hashes": [
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      ],
+      "expected": "0993562e172c64ee4dc2ecb8525986a8fbd40bf0331d49f0a90d3467b19747e3",
+      "description": "Three blocks - odd node passed up as-is",
+      "note": "Level 1: [SHA256(a+b), c], Level 2: SHA256(SHA256(a+b)+c)"
+    }
+  ],
+
+  "end_to_end": {
+    "description": "Complete merkle verification scenario with 3 rows and block_size=2",
+    "rows": [
+      {"id": "row1", "name": "Alice", "age": 30},
+      {"id": "row2", "name": "Bob", "age": 25},
+      {"id": "row3", "name": "Charlie", "age": 35}
+    ],
+    "skip_columns": ["document"],
+    "block_size": 2,
+    "expected_sorted_json": {
+      "row1": "{\"age\":30,\"id\":\"row1\",\"name\":\"Alice\"}",
+      "row2": "{\"age\":25,\"id\":\"row2\",\"name\":\"Bob\"}",
+      "row3": "{\"age\":35,\"id\":\"row3\",\"name\":\"Charlie\"}"
+    },
+    "expected_row_hashes": [
+      "07e0263112da17457fede8519fb3a507f2c5cbeda3c8577ab1ad1fa0891e027c",
+      "341353c74b3860fe2788732b8f754382ab4b1a2a8ac268b89321c8cf6a126af7",
+      "728b03b93042fd70b8470b18fa6edc96d0fd87377e5a791ba0680da9045490f0"
+    ],
+    "expected_block_hashes": [
+      "f52f8aad5575c997b40df5e73dacb06dac6e7007565e1e2f73c81e41ff588ad2",
+      "b1aa7cf82eb5c76ddc5084c13a3585c57bd2e289cb87a1801c35f1b3af8607c3"
+    ],
+    "expected_merkle_root": "20115621d21b58b7b433bfd8c4b21d6052adf3283d9858f8525fa7d5a8d97b6c"
+  }
+}

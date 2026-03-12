@@ -1,0 +1,14 @@
+# Build output
+build/
+
+# Compiled object files
+*.o
+*.a
+*.dylib
+*.so
+*.dll
+
+# Test binaries
+test_hash
+
+.DS_Store
