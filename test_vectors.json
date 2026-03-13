@@ -63,6 +63,30 @@
       "skip_keys": [],
       "expected": "{\"text\":\"hello\\nworld\\ttab\"}",
       "description": "Object with escape sequences"
+    },
+    {
+      "input": {"id": "u1", "tags": ["admin", "user"]},
+      "skip_keys": [],
+      "expected": "{\"id\":\"u1\",\"tags\":[\"admin\",\"user\"]}",
+      "description": "Object with string array (native JSON array)"
+    },
+    {
+      "input": {"id": "u2", "tags": []},
+      "skip_keys": [],
+      "expected": "{\"id\":\"u2\",\"tags\":[]}",
+      "description": "Object with empty array"
+    },
+    {
+      "input": {"id": "u3", "active": true, "online": false, "tags": ["a", "b"]},
+      "skip_keys": [],
+      "expected": "{\"active\":true,\"id\":\"u3\",\"online\":false,\"tags\":[\"a\",\"b\"]}",
+      "description": "Object with booleans and arrays (C library uses native JSON types)"
+    },
+    {
+      "input": {"id": "u4", "active": 1, "online": 0, "tags": "[\"a\",\"b\"]"},
+      "skip_keys": [],
+      "expected": "{\"active\":1,\"id\":\"u4\",\"online\":0,\"tags\":\"[\\\"a\\\",\\\"b\\\"]\"}",
+      "description": "Object with SQLite-normalized values (bools as 0/1, arrays as strings) - NOTE: produces DIFFERENT hash than native types"
     }
   ],
 
