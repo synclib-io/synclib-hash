@@ -1,10 +1,17 @@
 # synclib_hash
 
-Cross-platform Merkle tree hashing library. Single source of truth for consistent hashing across all platforms.
+Cross-platform Merkle tree hashing library for consistent hashing across all platforms.
 
 ## Purpose
 
-This library ensures that Merkle tree hashes are computed identically across:
+During normal sync, **the server is the single source of truth for `row_hash`**. The PostgreSQL extension (`pg_synclib_hash`) computes hashes at write time via triggers, and clients store the server-provided values. Clients never need to compute hashes themselves for sync to work.
+
+This library exists for:
+- **Server-side computation**: The `pg_synclib_hash` Postgres extension uses this C code to compute row hashes at write time
+- **Client-side data integrity** (optional): Clients can extend `synclib_hash` to compute hashes locally for their own validation purposes (e.g., verifying data integrity before upload, detecting local corruption)
+- **Cross-platform consistency**: When clients do compute hashes (for custom integrity checks), results match the server exactly
+
+Supported platforms:
 - Native platforms (iOS, Android, macOS, Linux, Windows) via C/FFI
 - Web browsers via WebAssembly
 - Server (Elixir) via WebAssembly + Wasmex
