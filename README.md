@@ -4,12 +4,23 @@ Cross-platform Merkle tree hashing library for consistent hashing across all pla
 
 ## Purpose
 
-During normal sync, **the server is the single source of truth for `row_hash`**. The PostgreSQL extension (`pg_synclib_hash`) computes hashes at write time via triggers, and clients store the server-provided values. Clients never need to compute hashes themselves for sync to work.
+This library is the shared hashing core used across all synclib platforms. It supports two Merkle verification approaches:
 
-This library exists for:
-- **Server-side computation**: The `pg_synclib_hash` Postgres extension uses this C code to compute row hashes at write time
-- **Client-side data integrity** (optional): Clients can extend `synclib_hash` to compute hashes locally for their own validation purposes (e.g., verifying data integrity before upload, detecting local corruption)
-- **Cross-platform consistency**: When clients do compute hashes (for custom integrity checks), results match the server exactly
+### Sameness (default — server-authoritative hashes)
+
+The server computes `row_hash` at write time via `pg_synclib_hash` triggers, and clients store the server-provided value. Merkle comparison answers: **do client and server have the same data?** If hashes differ, the data drifted and gets repaired. Clients never need to compute hashes themselves — they just store and compare. This is the simpler approach and is recommended for most sync use cases.
+
+### Correctness (client-verified hashes)
+
+Clients use this library directly to compute hashes from their local data, then compare against the server's hashes. This answers a stronger question: **is my data correct?** — verifying that data wasn't corrupted in transit, storage, or by application bugs. Use this when your application needs data integrity guarantees beyond consistency (e.g., financial records, medical data, audit trails).
+
+Both approaches produce identical hashes from the same data, so they can be combined — use server-authoritative hashes for fast sync, and add client-side verification selectively where correctness matters.
+
+### Who uses this library
+
+- **`pg_synclib_hash`**: The Postgres extension links against this C code to compute row hashes at write time (server-authoritative path)
+- **Client libraries**: Can use this library (via WASM or native FFI) for local correctness verification
+- **Elixir server**: Uses the WASM build via Wasmex as a fallback when `pg_synclib_hash` is not installed
 
 Supported platforms:
 - Native platforms (iOS, Android, macOS, Linux, Windows) via C/FFI
